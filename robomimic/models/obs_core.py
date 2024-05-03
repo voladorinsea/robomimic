@@ -21,6 +21,7 @@ from robomimic.utils.python_utils import extract_class_init_kwargs_from_dict
 
 # NOTE: this is required for the backbone classes to be found by the `eval` call in the core networks
 from robomimic.models.base_nets import *
+from robomimic.models.lcpm_net import *
 from robomimic.utils.vis_utils import visualize_image_randomizer
 from robomimic.macros import VISUALIZE_RANDOMIZER
 

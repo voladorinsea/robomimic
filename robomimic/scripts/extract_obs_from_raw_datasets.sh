@@ -3,7 +3,7 @@
 # This script holds the commands that were used to go from raw robosuite demo.hdf5 files
 # to our processed low-dim and image hdf5 files.
 
-BASE_DATASET_DIR="../../datasets"
+BASE_DATASET_DIR="/home/liang/Research/ImitationLearning/AttnMimic/VLP/bc/dataset/robomimic"
 echo "Using base dataset directory: $BASE_DATASET_DIR"
 
 

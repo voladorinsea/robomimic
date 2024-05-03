@@ -541,6 +541,84 @@ class ResNet18Conv(ConvBase):
         header = '{}'.format(str(self.__class__.__name__))
         return header + '(input_channel={}, input_coord_conv={})'.format(self._input_channel, self._input_coord_conv)
 
+class R3MRepModelConv(ConvBase):
+    """
+    Base class for ConvNets pretrained with R3M (https://arxiv.org/abs/2203.12601)
+    """
+    def __init__(
+        self,
+        input_channel=3,
+        r3m_model_class='resnet18',
+        freeze=True,
+    ):
+        """
+        Using R3M pretrained observation encoder network proposed by https://arxiv.org/abs/2203.12601
+        Args:
+            input_channel (int): number of input channels for input images to the network.
+                If not equal to 3, modifies first conv layer in ResNet to handle the number
+                of input channels.
+            r3m_model_class (str): select one of the r3m pretrained model "resnet18", "resnet34" or "resnet50"
+            freeze (bool): if True, use a frozen R3M pretrained model.
+        """
+        super(R3MRepModelConv, self).__init__()
+
+        try:
+            from r3m import load_r3m_local
+        except ImportError:
+            print("WARNING: could not load r3m library! Please follow https://github.com/facebookresearch/r3m to install R3M")
+
+        net = load_r3m_local(r3m_model_class)
+
+        assert input_channel == 3 # R3M only support input image with channel size 3
+        assert r3m_model_class in ["rep_r3m_34", "resnet34", "resnet50"] # make sure the selected r3m model do exist
+
+        # cut the last fc layer
+        self._input_channel = input_channel
+        self._r3m_model_class = r3m_model_class
+        self._freeze = freeze
+        self._input_coord_conv = False
+        self._pretrained = True
+
+        preprocess = nn.Sequential(
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        )
+        self.nets = Sequential(*([preprocess] + list(net.module.convnet.children())), has_output_shape = False)
+        if freeze:
+            self.nets.freeze()
+
+        self.weight_sum = np.sum([param.cpu().data.numpy().sum() for param in self.nets.parameters()])
+        if freeze:
+            for param in self.nets.parameters():
+                param.requires_grad = False
+
+        self.nets.eval()
+
+    def output_shape(self, input_shape):
+        """
+        Function to compute output shape from inputs to this module.
+        Args:
+            input_shape (iterable of int): shape of input. Does not include batch dimension.
+                Some modules may not need this argument, if their output does not depend
+                on the size of the input, or if they assume fixed size input.
+        Returns:
+            out_shape ([int]): list of integers corresponding to output shape
+        """
+        assert(len(input_shape) == 3)
+
+        if self._r3m_model_class == 'resnet50':
+            out_dim = 2048
+        else:
+            out_dim = 512
+
+        return [out_dim, 1, 1]
+
+    def __repr__(self):
+        """Pretty print network."""
+        header = '{}'.format(str(self.__class__.__name__))
+        return header + '(input_channel={}, input_coord_conv={}, pretrained={}, freeze={})'.format(self._input_channel, self._input_coord_conv, self._pretrained, self._freeze)
+
 
 class R3MConv(ConvBase):
     """

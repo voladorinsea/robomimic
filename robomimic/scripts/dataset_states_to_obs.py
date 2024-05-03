@@ -33,6 +33,8 @@ Example usage:
     python dataset_states_to_obs.py --dataset /path/to/demo.hdf5 --output_name image.hdf5 \
         --done_mode 2 --camera_names agentview robot0_eye_in_hand --camera_height 84 --camera_width 84
 
+    python dataset_states_to_obs.py --dataset VLP/bc/dataset/robomimic/can/ph/demo_v141.hdf5 --output_name demo_v141.hdf5 \
+        --done_mode 2 --camera_names agentview robot0_eye_in_hand --camera_height 84 --camera_width 84
     # extract 84x84 image and depth observations
     python dataset_states_to_obs.py --dataset /path/to/demo.hdf5 --output_name depth.hdf5 \
         --done_mode 2 --camera_names agentview robot0_eye_in_hand --camera_height 84 --camera_width 84 --depth
